@@ -1,4 +1,5 @@
 from django.views.generic import TemplateView, View
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 
 from mail.models import Recipient, RecipientGroup, Email, Log
@@ -11,15 +12,30 @@ class BaseTemplateView(TemplateView):
         ctx = super(BaseTemplateView, self).get_context_data(**kwargs)
         ctx.update({
             'emails': Email.objects.all(),
+            'groups': RecipientGroup.objects.all(),
         })
         return ctx
+
+    def post(self, request):
+        if 'group' in request.POST:
+            recipients = RecipientGroup.objects.get(
+                pk=request.POST['group']
+            ).recipients.all()
+        else:
+            recipients = Recipient.objects.filter(
+                pk__in=request.POST.getlist('recipients')
+            )
+        return render(
+            request, 'confirm_send.html', {
+                'recipients': recipients,
+                'email': request.POST['email'],
+            }
+        )
 
 
 class WebView(View):
 
     def get(self, request, url_token):
-        # http://pypila.stxnext.local:9080/web_view/c0ac0158b64842f3ff2ea91d56489c91bf02fe84ecaaab2c33b398d3e42a30d7
-
         log = Log.objects.get(url_token=url_token)
         return HttpResponse(log.email_content)
 
@@ -122,11 +138,16 @@ class RecipientsView(TemplateView):
 
         recipient.save()
 
+    def bulk_add(self):
+        pass
+
     def post(self, request, *args, **kwargs):
         if 'pk' in request.POST:
             self.edit_recipient()
         elif 'delete' in request.POST:
             self.delete_recipient()
+        elif 'recipients' in request.POST:
+            self.bulk_add()
         else:
             self.add_recipient()
         return self.get(request, *args, **kwargs)
@@ -139,3 +160,12 @@ def email_preview(request, email_pk):
     )
     email = Email.objects.get(pk=email_pk)
     return HttpResponse(email.render(request, recipient)[0])
+
+
+def send_emails(request):
+    email = Email.objects.get(pk=request.POST['email'])
+    recipients = Recipient.objects.filter(
+        pk__in=request.POST.getlist('recipients')
+    )
+    email.send(request, recipients)
+    return redirect('/')

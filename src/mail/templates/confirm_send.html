@@ -1,0 +1,49 @@
+{% extends 'app.html' %}
+
+{% block content %}
+
+<h2>Confirm send</h2>
+
+<div class="alert alert-warning">
+  <h4>Warning!</h4>
+  <p>
+    The folling recipents will recieve the email you specified - take care and
+    double check if those are the correct recipients of your email.
+  </p>
+</div>
+
+<form action="{% url 'send_emails' %}" method="POST">
+  {% csrf_token %}
+  {% if recipients %}
+  <div class="panel panel-default">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Email</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for recipient in recipients %}
+        <input type="hidden" name="recipients" value="{{ recipient.pk }}"/>
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td>{{ recipient.name }}</td>
+          <td>{{ recipient.email }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="alert alert-danger">
+    <h4>Error</h4>
+    <p>No recipients specified.</p>
+  </div>
+  {% endif %}
+  <input type="hidden" name="email" value="{{ email }}"/>
+  <input type="submit" class="btn btn-primary" value="Send"/>
+</form>
+
+{% endblock content %}

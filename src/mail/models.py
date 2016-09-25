@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import base64
 import hashlib
 import time
+import threading
 
 from django.db import models
 from django.template import Context, Template
@@ -79,6 +80,14 @@ class Email(models.Model):
         template = self.get_template()
         return template.render(ctx), url_token
 
+    class EmailThread(threading.Thread):
+        def __init__(self, msg):
+            self.msg = msg
+            threading.Thread.__init__(self)
+
+        def run(self):
+            self.msg.send(fail_silently=False)
+
     def send(self, request, recipients):
 
         for recipient in recipients:
@@ -90,7 +99,6 @@ class Email(models.Model):
                 email_content=email_content,
                 sent_by=request.user
             )
-            # email_content = self.add_readability_header(log, email_content)
             msg = EmailMessage(
                 subject=self.subject,
                 body=email_content,
@@ -98,7 +106,7 @@ class Email(models.Model):
                 to=[recipient.email]
             )
             msg.content_subtype = 'html'
-            msg.send(fail_silently=False)
+            self.EmailThread(msg).start()
 
 
 class EmailFields(models.Model):
