@@ -1,0 +1,26 @@
+{% load static %}
+
+<html>
+  <head>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/bootflat.min.css' %}"/>
+    <link href="http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,800,700,400italic,600italic,700italic,800italic,300italic" rel="stylesheet" type="text/css">
+    <style type="text/css">
+      body {background-color: #f3f3f3;}
+    </style>
+  </head>
+  <body>
+    {% block app_content %}
+    {% endblock app_content %}
+    <script type="text/javascript" src="{% static 'js/jquery-1.10.1.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/bootstrap.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/jquery.fs.selecter.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/icheck.min.js' %}"></script>
+    <script type="text/javascript">
+      $(document).ready(function(){
+        $("select").selecter();
+        $("input").iCheck({checkboxClass: 'icheckbox_flat'});
+      });
+    </script>
+  </body>
+</html>

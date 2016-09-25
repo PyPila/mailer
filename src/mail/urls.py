@@ -1,0 +1,19 @@
+from django.conf.urls import url
+
+from mail import views
+
+urlpatterns = [
+    url(r'^$', views.BaseTemplateView.as_view(), name='home'),
+    url(r'^recipients/$', views.RecipientsView.as_view(), name='recipients'),
+    url(r'^emails/$', views.EmailsView.as_view(), name='emails'),
+    url(
+        r'^web_view/(?P<url_token>.+)$',
+        views.WebView.as_view(),
+        name='web_view'
+    ),
+    url(
+        r'^email/preview/(?P<email_pk>\d+)/$',
+        views.email_preview,
+        name='email_preview'
+    )
+]
