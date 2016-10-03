@@ -1,0 +1,14 @@
+language: python
+python:
+  - "2.7"
+env:
+  - DJANGO_SETTINGS_MODULE=service.settings.test
+install:
+  - pip install -q -r requirements/common.txt
+  - pip install pep8 codecov --use-mirrors
+before_script:
+  - "pep8 --exclude=migrations --ignore=E501,E225 src"
+script:
+  - coverage run --source='src' src/manage.py test src
+after_success:
+  - codecov

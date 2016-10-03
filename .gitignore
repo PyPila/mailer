@@ -87,6 +87,6 @@ ENV/
 
 # Rope project settings
 .ropeproject
-src/email_templates
+email_templates
 db.sqlite3
 src/service/settings/local.py
