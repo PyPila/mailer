@@ -12,6 +12,9 @@ from django.conf import settings
 from django.template.base import VariableNode
 
 
+RESTRICTED_EMAIL_FIELDS = ('web_view_url', )
+
+
 class RecipientGroup(models.Model):
     name = models.CharField(max_length=64)
 
@@ -55,13 +58,21 @@ class Email(models.Model):
     def get_template(self):
         return Template(self.template_content)
 
+    def __is_field_node(self, node):
+        if all([
+            isinstance(node, VariableNode),
+            '.' not in node.token.contents,
+            node.token.contents not in RESTRICTED_EMAIL_FIELDS,
+        ]):
+            return True
+        return False
+
     def make_template_fields(self):
         template = self.get_template()
         self.fields.all().delete()
         for node in template.nodelist:
-            if isinstance(node, VariableNode):
-                if '.' not in node.token.contents:
-                    self.fields.create(name=node.token.contents)
+            if self.__is_field_node(node):
+                self.fields.create(name=node.token.contents)
 
     def render(self, request, recipient):
         url_token = hashlib.sha256(

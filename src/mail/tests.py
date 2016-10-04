@@ -16,6 +16,7 @@ class EmailSendTestCase(TestCase):
                 (
                     'Test Email: {{ test_context }} '
                     'Recipient: {{ recipient.name }} '
+                    '{{ web_view_url }} '
                 )
             )
         )
@@ -46,14 +47,16 @@ class EmailSendTestCase(TestCase):
         self.assertEqual(fields[0].name, 'content')
 
     def test_render(self):
-        mail_content = self.email.render(
+        mail_content, token = self.email.render(
             self.rf.get('/'),
             self.recipient,
-        )[0]
+        )
         self.assertEqual(
             mail_content,
             (
                 'Test Email: some content '
                 'Recipient: Test Recipient '
+                'http://testserver/web_view/'
+                '{} '.format(token)
             )
         )
