@@ -1,10 +1,16 @@
-from django.conf.urls import url
+from django.conf.urls import url, include
 
 from mail import views
 
 urlpatterns = [
     url(r'^$', views.BaseTemplateView.as_view(), name='home'),
-    url(r'^recipients/$', views.RecipientsView.as_view(), name='recipients'),
+    # url(r'^recipients/$', views.RecipientsView.as_view(), name='recipients'),
+    url(
+        r'^recipients/', include(
+            views.RecipientsView.get_urls(namespace='recipients'),
+            namespace='recipients'
+        )
+    ),
     url(r'^emails/$', views.EmailsView.as_view(), name='emails'),
     url(r'^send_emails/$', views.send_emails, name='send_emails'),
     url(

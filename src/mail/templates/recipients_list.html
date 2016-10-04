@@ -1,0 +1,57 @@
+{% extends 'app.html' %}
+
+{% block content %}
+
+<h2>Recipients</h2>
+
+<div class="well">
+  <div class="row">
+    <div class="col-xs-12">
+      <div class="btn-group">
+        <a type="button" class="btn btn-primary" href="{% url 'recipients:add' %}">Add</a>
+        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+          <span class="caret"></span>
+          <span class="sr-only">Toggle Dropdown</span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+          <li><a href="#">Bulk add</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <table class="table">
+    <tr>
+      <th>Name</th>
+      <th>email</th>
+    </tr>
+    {% for recipient in object_list %}
+      <tr>
+        <td>{{ recipient.name }}</td>
+        <td>{{ recipient.email }}</td>
+        <td>
+          <a class="badge badge-primary" href="{% url 'recipients:change' recipient.pk %}"><i class="glyphicon glyphicon-pencil"></i></a>
+          <a class="badge badge-danger" data-toggle="modal" data-target="#deleteModal" data-pk="{{ recipient.pk }}"><i class="glyphicon glyphicon-remove"></i></a>
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+</div>
+
+{% include 'fragments/confirm_modal.html' %}
+
+{% endblock content %}
+
+{% block scripts %}
+<script type="text/javascript">
+  $('#deleteModal').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget)
+    var pk = button.data('pk')
+    var modal = $(this)
+    var url = "{% url 'recipients:delete' 0 %}"
+    modal.find('a#delete').attr('href', url.replace('0', pk))
+  })
+</script>
+{% endblock scripts %}

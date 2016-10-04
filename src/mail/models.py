@@ -19,6 +19,24 @@ class RecipientGroup(models.Model):
         return self.name
 
 
+class RecipientManager(models.Manager):
+
+    def create(self, **kwargs):
+        for field in ['name', 'email']:
+            if isinstance(kwargs[field], list):
+                kwargs[field] = kwargs[field][0]
+        obj = super(RecipientManager, self).create(
+            name=kwargs['name'],
+            email=kwargs['email'],
+        )
+        groups = kwargs.pop('groups', [])
+        for group_name in groups:
+            obj.groups.add(
+                RecipientGroup.objects.get(name=group_name)
+            )
+        return obj
+
+
 class Recipient(models.Model):
     name = models.CharField(max_length=256)
     email = models.EmailField(unique=True)
@@ -26,6 +44,28 @@ class Recipient(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = RecipientManager()
+
+    def get_absolute_url(self):
+        return reverse('recipients:change', kwargs={'pk': self.pk})
+
+    def change(self, **kwargs):
+        self.name = kwargs['name'][0]
+        self.email = kwargs['email'][0]
+
+        groups = self.groups.values('name')
+
+        for group_name in kwargs['groups']:
+            if group_name not in groups:
+                self.groups.add(
+                    RecipientGroup.objects.get(name=group_name)
+                )
+        for group in self.groups.exclude(
+            name__in=kwargs['groups']
+        ):
+            self.groups.remove(group)
+        self.save()
 
 
 class Email(models.Model):

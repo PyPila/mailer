@@ -19,11 +19,11 @@
           </div>
           <h4>Configuration</h4>
           <div class="list-group">
-            <a href="{% url 'recipients' %}" class="list-group-item">
+            <a href="{% url 'recipients:list' %}" class="list-group-item">
               <span class="badge">{{ recipients_count }}</span>
               Recipients
             </a>
-            <a href="{% url 'recipients' %}" class="list-group-item">
+            <a href="{% url 'recipients:list' %}" class="list-group-item">
               <span class="badge">{{ groups_count }}</span>
               Groups
             </a>

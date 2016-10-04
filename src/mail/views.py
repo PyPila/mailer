@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 
 from mail.models import Recipient, RecipientGroup, Email, Log
+from utils.views import ModelView
 
 
 class BaseTemplateView(TemplateView):
@@ -94,63 +95,15 @@ class EmailsView(TemplateView):
         return self.get(request, *args, **kwargs)
 
 
-class RecipientsView(TemplateView):
-    template_name = 'recipients.html'
+class RecipientsView(ModelView):
+    template_name = 'recipients'
+    namespace = 'recipients'
+    model = Recipient
 
-    def get_context_data(self, **kwargs):
-        ctx = super(RecipientsView, self).get_context_data(**kwargs)
-        ctx.update({
-            'recipients': Recipient.objects.all(),
-            'groups': RecipientGroup.objects.all(),
-        })
+    def get_obj_context(self, extra_context=None):
+        ctx = super(RecipientsView, self).get_obj_context(extra_context)
+        ctx.update({'groups': RecipientGroup.objects.all()})
         return ctx
-
-    def add_recipient(self):
-        recipient = Recipient.objects.create(
-            name=self.request.POST['name'],
-            email=self.request.POST['email'],
-        )
-        for group_name in self.request.POST.getlist('groups'):
-            recipient.groups.add(
-                RecipientGroup.objects.get(name=group_name)
-            )
-
-    def delete_recipient(self):
-        Recipient.objects.get(pk=self.request.POST['delete']).delete()
-
-    def edit_recipient(self):
-        recipient = Recipient.objects.get(pk=self.request.POST['pk'])
-
-        recipient.name = self.request.POST['name']
-        recipient.email = self.request.POST['email']
-
-        recipient_groups = recipient.groups.values('name')
-
-        for group_name in self.request.POST.getlist('groups'):
-            if group_name not in recipient_groups:
-                recipient.groups.add(
-                    RecipientGroup.objects.get(name=group_name)
-                )
-        for group in recipient.groups.exclude(
-            name__in=self.request.POST.getlist('groups')
-        ):
-            recipient.groups.remove(group)
-
-        recipient.save()
-
-    def bulk_add(self):
-        pass
-
-    def post(self, request, *args, **kwargs):
-        if 'pk' in request.POST:
-            self.edit_recipient()
-        elif 'delete' in request.POST:
-            self.delete_recipient()
-        elif 'recipients' in request.POST:
-            self.bulk_add()
-        else:
-            self.add_recipient()
-        return self.get(request, *args, **kwargs)
 
 
 def email_preview(request, email_pk):
