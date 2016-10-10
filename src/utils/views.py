@@ -15,13 +15,33 @@ class ModelView(View):
     def get_queryset(self):
         return self.model.objects.all()
 
+    def __get_from_post(self, post_data):
+        fields_names = [
+            field.name for field in
+            self.model._meta.fields + self.model._meta.many_to_many
+        ]
+        items = {}
+        for field, value in self.request.POST.viewitems():
+            if field in fields_names:
+                if len(value) == 1:
+                    items[field] = value[0]
+                else:
+                    items[field] = value
+        return items
+
     def change_obj(self, **lookup_kwargs):
         recipient = self.get_obj(**lookup_kwargs)
-        recipient.change(**self.request.POST)
+        recipient.change(
+            self.__get_from_post(self.request.POST),
+            self.request
+        )
         return recipient
 
     def create_obj(self):
-        return self.model.objects.create(**self.request.POST)
+        return self.model.objects.view_create(
+            self.__get_from_post(self.request.POST),
+            self.request
+        )
 
     def dispatch(self, request, *args, **kwargs):
         handler = getattr(self, self.action)
@@ -81,15 +101,16 @@ class ModelView(View):
     def change(self, request, pk):
         if request.method.lower() == 'get':
             obj = self.get_obj(pk=pk)
+            return TemplateResponse(
+                request=request,
+                template=self.__get_template('detail'),
+                context=self.get_obj_context({'object': obj})
+            )
         elif request.method.lower() == 'post':
             obj = self.change_obj(pk=pk)
+            return redirect(obj)
         else:
             return HttpResponseNotAllowed(['get', 'post', ])
-        return TemplateResponse(
-            request=request,
-            template=self.__get_template('detail'),
-            context=self.get_obj_context({'object': obj})
-        )
 
     def delete(self, request, pk):
         self.get_obj(pk=pk).delete()

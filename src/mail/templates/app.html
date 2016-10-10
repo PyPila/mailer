@@ -29,7 +29,7 @@
             </a>
           </div>
           <div class="list-group">
-            <a href="{% url 'emails' %}" class="list-group-item">
+            <a href="{% url 'emails:list' %}" class="list-group-item">
               <span class="badge">{{ emails_count }}</span>
               Emails
             </a>
@@ -48,19 +48,12 @@
                 <h3>{{ email.name }}</h3>
                 <p><iframe src="{% url 'email_preview' email.pk %}" style="border: 1px solid #e5e5e5; border-radius: 3px; width: 100%; height: 300px;"></iframe></p>
                 <p>
-                  <a data-toggle="modal" data-target="#{{ 'emailsendgroup'|add:email.name|slugify }}" class="btn btn-warning" role="button">Group</a>
-                  <a data-toggle="modal" data-target="#{{ 'emailsend'|add:email.name|slugify }}" class="btn btn-default" role="button">Recipients</a>
+                  <a class="btn btn-warning" role="button">Group</a>
+                  <a class="btn btn-default" role="button">Recipients</a>
                 </p>
               </div>
             </div>
           </div>
-
-          {% with 'emailsendgroup'|add:email.name|slugify as modal_id %}
-            {% include "fragments/emailsendgroup.html" %}
-          {% endwith %}
-          {% with modal_id='emailsend'|add:email.name|slugify input_value=email.pk title='Delete email' %}
-            {% include "fragments/confirm_modal.html" %}
-          {% endwith %}
         {% endfor %}
         </div>
       {% endblock content %}

@@ -41,58 +41,10 @@ class WebView(View):
         return HttpResponse(log.email_content)
 
 
-class EmailsView(TemplateView):
-    template_name = 'emails.html'
-
-    def get_context_data(self, **kwargs):
-        ctx = super(EmailsView, self).get_context_data(**kwargs)
-        ctx.update({
-            'emails': Email.objects.all(),
-        })
-        return ctx
-
-    def add_email(self):
-        email = Email.objects.create(
-            name=self.request.POST['name'],
-            subject=self.request.POST['subject'],
-            from_email=self.request.POST['from_email'],
-            template=self.request.FILES['template'],
-        )
-        email.make_template_fields()
-
-    def edit_email(self):
-        email = Email.objects.get(pk=self.request.POST['pk'])
-
-        email.name = self.request.POST['name']
-        email.subject = self.request.POST['subject']
-        email.from_email = self.request.POST['from_email']
-
-        if self.request.FILES.get('template'):
-            email.template = self.request.FILES['template']
-            email.make_template_fields()
-
-        email.save()
-
-        for key, value in self.request.POST.iteritems():
-            if key.startswith('fields_'):
-                email.fields.filter(name=key[7:]).update(value=value)
-
-        return email
-
-    def post(self, request, *args, **kwargs):
-        if 'pk' in request.POST:
-            email = self.edit_email()
-            if 'test_send' in request.POST:
-                recipient, __ = Recipient.objects.get_or_create(
-                    name=request.user.get_full_name(),
-                    email=request.user.email,
-                )
-                email.send(request, [recipient])
-        elif 'delete' in request.POST:
-            self.delete_email()
-        else:
-            self.add_email()
-        return self.get(request, *args, **kwargs)
+class EmailsView(ModelView):
+    template_name = 'emails'
+    namespace = 'emails'
+    model = Email
 
 
 class RecipientsView(ModelView):

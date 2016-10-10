@@ -12,60 +12,12 @@ from django.conf import settings
 from django.template.base import VariableNode
 
 
-class RecipientGroup(models.Model):
-    name = models.CharField(max_length=64)
+class EmailManager(models.Manager):
 
-    def __unicode__(self):
-        return self.name
-
-
-class RecipientManager(models.Manager):
-
-    def create(self, **kwargs):
-        for field in ['name', 'email']:
-            if isinstance(kwargs[field], list):
-                kwargs[field] = kwargs[field][0]
-        obj = super(RecipientManager, self).create(
-            name=kwargs['name'],
-            email=kwargs['email'],
-        )
-        groups = kwargs.pop('groups', [])
-        for group_name in groups:
-            obj.groups.add(
-                RecipientGroup.objects.get(name=group_name)
-            )
+    def view_create(self, data, request):
+        obj = self.create(**data)
+        obj.make_template_fields()
         return obj
-
-
-class Recipient(models.Model):
-    name = models.CharField(max_length=256)
-    email = models.EmailField(unique=True)
-    groups = models.ManyToManyField(RecipientGroup, related_name='recipients')
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    objects = RecipientManager()
-
-    def get_absolute_url(self):
-        return reverse('recipients:change', kwargs={'pk': self.pk})
-
-    def change(self, **kwargs):
-        self.name = kwargs['name'][0]
-        self.email = kwargs['email'][0]
-
-        groups = self.groups.values('name')
-
-        for group_name in kwargs['groups']:
-            if group_name not in groups:
-                self.groups.add(
-                    RecipientGroup.objects.get(name=group_name)
-                )
-        for group in self.groups.exclude(
-            name__in=kwargs['groups']
-        ):
-            self.groups.remove(group)
-        self.save()
 
 
 class Email(models.Model):
@@ -76,6 +28,26 @@ class Email(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     updated_at = models.DateTimeField(auto_now=True, editable=False)
+
+    objects = EmailManager()
+
+    def get_absolute_url(self):
+        return reverse('emails:change', kwargs={'pk': self.pk})
+
+    def change(self, data, request):
+        self.name = data['name']
+        self.subject = data['subject']
+        self.from_email = data['from_email']
+
+        if request.FILES.get('template'):
+            self.template = self.request.FILES['template']
+            self.make_template_fields()
+
+        for key, value in request.POST.iteritems():
+            if key.startswith('fields_'):
+                self.fields.filter(name=key[7:]).update(value=value)
+
+        self.save()
 
     @property
     def template_content(self):
@@ -147,6 +119,61 @@ class Email(models.Model):
             )
             msg.content_subtype = 'html'
             self.EmailThread(msg).start()
+
+
+class RecipientGroup(models.Model):
+    name = models.CharField(max_length=64)
+
+    def __unicode__(self):
+        return self.name
+
+
+class RecipientManager(models.Manager):
+
+    def view_create(self, data, request):
+        groups = data.pop('groups', [])
+        obj = self.create(**data)
+        for group_name in groups:
+            obj.groups.add(
+                RecipientGroup.objects.get(name=group_name)
+            )
+        return obj
+
+
+class Recipient(models.Model):
+    name = models.CharField(max_length=256)
+    email = models.EmailField(unique=True)
+    groups = models.ManyToManyField(RecipientGroup, related_name='recipients')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    recieved_emails = models.ManyToManyField(
+        Email,
+        related_name='sent_to', through='Log'
+    )
+
+    objects = RecipientManager()
+
+    def get_absolute_url(self):
+        return reverse('recipients:change', kwargs={'pk': self.pk})
+
+    def change(self, data, request):
+        self.name = data['name']
+        self.email = data['email']
+
+        groups = self.groups.values('name')
+
+        for group_name in request.POST.getlist('groups'):
+            if group_name not in groups:
+                self.groups.add(
+                    RecipientGroup.objects.get(name=group_name)
+                )
+        for group in self.groups.exclude(
+            name__in=request.POST.getlist('groups')
+        ):
+            self.groups.remove(group)
+        self.save()
 
 
 class EmailFields(models.Model):

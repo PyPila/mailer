@@ -11,7 +11,12 @@ urlpatterns = [
             namespace='recipients'
         )
     ),
-    url(r'^emails/$', views.EmailsView.as_view(), name='emails'),
+    url(
+        r'^emails/', include(
+            views.EmailsView.get_urls(namespace='emails'),
+            namespace='emails'
+        )
+    ),
     url(r'^send_emails/$', views.send_emails, name='send_emails'),
     url(
         r'^web_view/(?P<url_token>.+)$',
