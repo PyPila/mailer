@@ -12,5 +12,5 @@ ignore_errors = True
 omit =
     tests/*
     migrations/*
-    wsgi.py
+    src/service/wsgi.py
     apps.py

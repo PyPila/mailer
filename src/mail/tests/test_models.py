@@ -3,7 +3,16 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth import get_user_model
 from mock import patch
 
-from mail.models import Email, EmailFields, Recipient
+from mail.models import Email, EmailFields, Recipient, RecipientGroup
+
+
+class RecipientGroupTestCase(TestCase):
+
+    def test_unicode(self):
+        self.assertEqual(
+            unicode(RecipientGroup(name='group_name')),
+            'group_name'
+        )
 
 
 class EmailModelTestCase(TestCase):
@@ -31,6 +40,9 @@ class EmailModelTestCase(TestCase):
             email='test@pypila.com',
         )
         self.rf = RequestFactory()
+
+    def test_abs_url(self):
+        self.assertEqual(self.email.get_absolute_url(), '/emails/1/change/')
 
     @patch.object(Email, 'make_template_fields')
     def test_view_create(self, mock_make_template_fields):
