@@ -30,12 +30,12 @@ class ModelView(View):
         return items
 
     def change_obj(self, **lookup_kwargs):
-        recipient = self.get_obj(**lookup_kwargs)
-        recipient.change(
+        obj = self.get_obj(**lookup_kwargs)
+        obj.change(
             self.__get_from_post(self.request.POST),
             self.request
         )
-        return recipient
+        return obj
 
     def create_obj(self):
         return self.model.objects.view_create(

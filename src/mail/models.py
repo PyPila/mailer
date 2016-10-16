@@ -40,7 +40,7 @@ class Email(models.Model):
         self.from_email = data['from_email']
 
         if request.FILES.get('template'):
-            self.template = self.request.FILES['template']
+            self.template = request.FILES['template']
             self.make_template_fields()
 
         for key, value in request.POST.iteritems():
