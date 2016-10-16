@@ -1,0 +1,34 @@
+{% extends 'app.html' %}
+
+{% block content %}
+
+<form action="." method="post">
+  {% csrf_token %}
+  <h6>General</h6>
+  <div class="row">
+    <div class="col-xs-6">
+      <input type="text" class="form-control" name="name" placeholder="Name" value="{{ object.name }}" />
+    </div>
+    <div class="col-xs-6">
+      <input type="email" class="form-control" name="email" placeholder="E-mail" value="{{ object.email }}" />
+    </div>
+  </div>
+  <h6>Groups</h6>
+  <div class="row">
+    <div class="col-xs-12">
+      <select multiple="true" name="groups">
+        {% for group in groups %}
+          {% if group in object.groups.all %}
+            <option value="{{ group.name }}" selected="selected">{{ group.name }}</option>
+          {% else %}
+            <option value="{{ group.name }}">{{ group.name }}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+  <input type="submit" class="btn btn-primary" value="Save changes"/>
+</form>
+
+{% endblock content %}

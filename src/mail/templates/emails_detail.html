@@ -1,0 +1,53 @@
+{% extends 'app.html' %}
+
+{% load mailer %}
+
+{% block content %}
+
+<form action="." method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <h6>General</h6>
+  <div class="row">
+    <div class="col-xs-4">
+      <input type="text" class="form-control" name="name" placeholder="Name" value="{{ object.name }}" />
+    </div>
+    <div class="col-xs-4">
+      <input type="text" class="form-control" name="subject" placeholder="Subject" value="{{ object.subject }}" />
+    </div>
+    <div class="col-xs-4">
+      <input type="email" class="form-control" name="from_email" placeholder="From" value="{{ object.from_email }}" />
+    </div>
+  </div>
+  <h6>Template</h6>
+  <div class="row">
+    <div class="col-xs-12">
+      <input type="file" class="form-control" name="template"/>
+    </div>
+  </div>
+  {% if object %}
+    <br/>
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="jumbotron">
+          <div class="jumbotron-contents">
+            <iframe src="{% url 'email_preview' object.pk %}" style="border:0; width:100%; height:300px;"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        {% for field in object.fields.all %}
+            <div class="input-group">
+              <span class="input-group-addon">{{ field.name }}</span>
+              <input type="text" class="form-control" name="fields_{{ field.name }}" value="{{ field.value|none }}" placeholder="{{ field.name }}" />
+            </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+  <input type="submit" class="btn btn-primary" value="Save changes"/>
+</form>
+
+{% endblock content %}
